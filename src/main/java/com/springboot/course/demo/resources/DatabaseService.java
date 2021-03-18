@@ -1,6 +1,7 @@
 package com.springboot.course.demo.resources;
 
 import com.springboot.course.demo.domain.Customer;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.util.LinkedList;
@@ -13,8 +14,15 @@ public class DatabaseService {
     private static final List<Customer> customers  = new CopyOnWriteArrayList<>();
 
 
-    public void save(Customer customer) {
+    public boolean save(Customer customer) {
+
+        for(Customer c: customers){
+            if(c.getId()==customer.getId()){
+                return false;
+            }
+        }
         customers.add(customer);
+        return true;
     }
 
     public void delete(Customer customer){

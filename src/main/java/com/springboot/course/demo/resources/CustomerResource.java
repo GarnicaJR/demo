@@ -1,11 +1,14 @@
 package com.springboot.course.demo.resources;
 
 
+import com.fasterxml.jackson.databind.node.POJONode;
 import com.springboot.course.demo.domain.Customer;
+import com.springboot.course.demo.domain.CustomerResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.awt.*;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
@@ -29,13 +32,21 @@ public class CustomerResource {
     }
 
     @PostMapping()
-    public ResponseEntity<Customer> createCustomer(@RequestBody  Customer customer){
-        customer.setId(customer.getId());
-        customer.setName(customer.getName());
+    public ResponseEntity<CustomerResponse> createCustomer(@RequestBody  Customer customer){
 
-        service.save(customer);
+        boolean isSaved = service.save(customer);
+        CustomerResponse response = new CustomerResponse();
 
-        return ResponseEntity.status(201).body(customer);
+        if(isSaved){
+            response.setStatus("Customer has been created");
+            response.setDate(LocalDate.now().toString());
+            return ResponseEntity.status(201).body(response);
+        }
+        else{
+            response.setStatus("look like the ID already exists");
+            response.setDate(LocalDate.now().toString());
+            return ResponseEntity.status(400).body(response);
+        }
     }
 
 
