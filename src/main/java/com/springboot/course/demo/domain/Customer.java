@@ -2,8 +2,22 @@ package com.springboot.course.demo.domain;
 
 public class Customer {
 
+
     private int id;
+
     private String name;
+
+
+    private String sex;
+
+
+    public String getSex() {
+        return sex;
+    }
+
+    public void setSex(String sex) {
+        this.sex = sex;
+    }
 
     public int getId() {
         return id;

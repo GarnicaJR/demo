@@ -1,18 +1,18 @@
 package com.springboot.course.demo.resources;
 
 
-import com.fasterxml.jackson.databind.node.POJONode;
 import com.springboot.course.demo.domain.Customer;
-import com.springboot.course.demo.domain.CustomerResponse;
+import com.springboot.course.demo.dto.CustomerResponseDTO;
+import com.springboot.course.demo.mapper.CustomerMapper;
+import com.springboot.course.demo.service.DatabaseService;
+import com.springboot.course.demo.service.PaymentService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.awt.*;
-import java.time.LocalDate;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1/customer")
@@ -20,46 +20,62 @@ public class CustomerResource {
 
 
     @Autowired
-    private DatabaseService service;
+    private DatabaseService databaseService;
+
+
+    @Autowired
+    private PaymentService paymentService;
+
+
+    @Autowired
+    @Qualifier("debitCardPaymentService")
+    private PaymentService debitcardPaymentService;
 
     //Rest API -> GET PUT POST PATCH DELETE
 
     @GetMapping()
-    public ResponseEntity<List<Customer>>  all(){
+    public ResponseEntity<List<CustomerResponseDTO>>  all(){
 
-        List<Customer> customer = service.all();
-        return ResponseEntity.ok(customer);
+        List<Customer> customer = databaseService.all();
+
+        //Call a payment method
+        paymentService.pay("888a8sd8fas",150);
+        debitcardPaymentService.pay("kkkak",100);
+
+        List<CustomerResponseDTO> payload = customer.stream()
+                .map(CustomerMapper.INSTANCE::toCustomerResponseDto)
+                .collect(Collectors.toList());
+
+
+        return ResponseEntity.ok(payload);
     }
 
     @PostMapping()
-    public ResponseEntity<CustomerResponse> createCustomer(@RequestBody  Customer customer){
+    public ResponseEntity<CustomerResponseDTO> createCustomer(@RequestBody  Customer customer){
 
-        boolean isSaved = service.save(customer);
-        CustomerResponse response = new CustomerResponse();
+        boolean isSaved = databaseService.save(customer);
+
 
         if(isSaved){
-            response.setStatus("Customer has been created");
-            response.setDate(LocalDate.now().toString());
-            return ResponseEntity.status(201).body(response);
+            CustomerResponseDTO customerResponseDTO = CustomerMapper.INSTANCE.toCustomerResponseDto(customer);
+            return ResponseEntity.status(201).body(customerResponseDTO);
         }
         else{
-            response.setStatus("look like the ID already exists");
-            response.setDate(LocalDate.now().toString());
-            return ResponseEntity.status(400).body(response);
+            return ResponseEntity.status(204).build();
         }
     }
 
 
     @PutMapping
     public ResponseEntity<?> updateCustomer(@RequestBody Customer customer){
-        service.update(customer);
+        databaseService.update(customer);
         return ResponseEntity.status(204).build();
     }
 
     @DeleteMapping
     public ResponseEntity<?> deleteCustomer(@RequestBody Customer customer){
 
-        service.delete(customer);
+        databaseService.delete(customer);
         return ResponseEntity.status(204).build();
     }
 
